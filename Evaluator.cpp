@@ -63,6 +63,7 @@ BigInt Evaluator::evaluateExprTree(const ExprTreeNode *root,
     evaluateExprTree(root->expr1, varTbl);
     return evaluateExprTree(root->expr2, varTbl);
   }
+  return BigInt();
 }
 
 } // namespace ds
