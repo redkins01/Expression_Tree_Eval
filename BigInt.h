@@ -32,154 +32,143 @@ public:
 
   inline BigInt operator+(const BigInt &other) const;
   inline BigInt operator-(const BigInt &other) const;
-  //inline BigInt operator*(const BigInt &other) const;
+  inline bool operator<(const BigInt &other) const;
+  inline BigInt operator=(const BigInt &other) const;
 };
+
+bool BigInt::operator<(const BigInt &other) const{
+  if (this->digits.size() > other.digits.size()) {
+    return false;
+  }
+  else if (this->digits.size() < other.digits.size()) {
+    return true;
+  }
+  else {
+    for (int i = 0; i < this->digits.size(); i++) {
+      if (this->digits.get(i) > other.digits.get(i)) {
+        return false;
+      }
+      else if (this->digits.get(i) < other.digits.get(i)) {
+        return true;
+      }
+    }
+    return false;
+  }
+}
+
+BigInt BigInt::operator=(const BigInt &other) const{
+  BigInt result;
+  for (int i = 0; i < other.digits.size(); i++) {
+    result.digits.addLast(other.digits.get(i));
+  }
+  return result;
+}
 
 /** Return the *sum* of this BigInt and the `other` BigInt. */
 BigInt BigInt::operator+(const BigInt &other) const {
   // Reference: https://en.wikipedia.org/wiki/Addition
   // Example: 456 + 1123 = 1579
-
-  VList<int> smaller;
-  VList<int> larger;
-  int s_size;
-  int l_size;
-  BigInt value;
-  int i = 0;
-  int num;
+  BigInt result;
+  int i = this->digits.size() - 1; int j = other.digits.size() - 1;
+  int d1; int d2;
+  int sum;
   bool overflow = false;
 
-  //Finds the larger of the two numbers (if they are the same the first digit in the addition will be the smaller)
-  if (other.digits.size() < this->digits.size()) {
-    smaller = other.digits;
-    larger = this->digits;
-  }
-  else {
-    smaller = this->digits;
-    larger = other.digits;
-  }
-  //Sets sizes for use in for loops (using smaller.size() leads to error because we are deleting sizes)
-  s_size = smaller.size();
-  l_size = larger.size();
+  while (i >= 0 || j >= 0) {
+    if (i < 0) {
+      d1 = 0;
+    }
+    else {
+      d1 = this->digits.get(i);
+    }
+    if (j < 0) {
+      d2 = 0;
+    }
+    else {
+      d2 = other.digits.get(j);
+    }
 
-  //Adds the last digit of each vlaue, if there is an overflow sets value to true and will add to next value in list
-  for (; i < s_size; i++) {
-    num = smaller.getLast() + larger.getLast();
+    sum = d1 + d2;
+
     if (overflow) {
-      num++;
+      sum++;
       overflow = false;
     }
-    if (num > 9) {
+    if (sum >= 10) {
+      sum -= 10;
       overflow = true;
     }
-    value.digits.addFirst(num % 10);
-    smaller.removeLast();
-    larger.removeLast();
+
+    result.digits.addFirst(sum);
+    i--; j--;
   }
 
-  //Puts the remaining digits from larger in the list (if there is an over flow, adds it to the next place after smaller ends and sets it to false)
-  for (; i < l_size; i++) {
-    num = larger.getLast();
-    if (overflow) {
-      num++;
-      overflow = false;
-    }
-    value.digits.addFirst(num);
-    larger.removeLast();
-  }
-
-  //If the values of the same length add 1 to the list if there is an overflow
   if (overflow) {
-    value.digits.addFirst(1);
-    overflow = false;
+    result.digits.addFirst(1);
   }
 
-  return value;
+  return result;
 }
 
 /** Return the *absolute difference* between this and the `other` BigInt. */
 BigInt BigInt::operator-(const BigInt &other) const {
   // Reference: https://en.wikipedia.org/wiki/Absolute_difference
   // Example: 456 - 1123 = 667
-
-  VList<int> smaller = this->digits;
-  VList<int> larger = other.digits;
-  int s_size;
-  int l_size;
-  BigInt value;
-  int i = 0;
-  int num;
-
-  //Finds the larger of the two numbers (if they are the same the first digit in the subtraction will be the smaller)
-  if (other.digits.size() < this->digits.size()) {
-    smaller = other.digits;
-    larger = this->digits;
+  //Checks to make sure that this is always larger than other
+  if (*this < other) {
+    return other - *this;
   }
-  else if (other.digits.size() == this->digits.size()){
-    for (int j = 0; j < this->digits.size(); j++) {
-      if (this->digits.get(j) > other.digits.get(j)) {
-        larger = this->digits;
-        smaller = other.digits;
-        break;
-      }
-      else if (this->digits.get(j) < other.digits.get(j)) {
-        larger = other.digits;
-        smaller = this->digits;
-        break;
-      }
-    }    
-  }
-  else {
-    smaller = this->digits;
-    larger = other.digits;
-  }
-  s_size = smaller.size();
-  l_size = larger.size();
 
-  //Subtracts the last two digits. If the last value of larger is smaller than smaller then adds 10 and subtracts the two
-  int temp;
-  for (; i < s_size; i++) {
-    if (smaller.getLast() > larger.getLast()) {
-      temp = larger.get(larger.size() - 2) - 1;
-      larger.remove(larger.size() - 2);
-      larger.insert(temp, larger.size() - 1);
-      num = 10 + larger.getLast() - smaller.getLast();
+  BigInt result;
+  int i = this->digits.size() - 1;
+  int j = other.digits.size() - 1;
+  int d1; int d2;
+  int difference;
+  bool overflow = false;
+
+  //Set value to current digit in list unless it cannot be set, which it is 0
+  while(i >= 0 || j >= 0) {
+    if (i < 0) {
+      d1 = 0;
     }
     else {
-      num = larger.getLast() - smaller.getLast();
+      d1 = this->digits.get(i);
     }
-    value.digits.addFirst(num);
-    larger.removeLast();
-    smaller.removeLast();
+    if (j < 0) {
+      d2 = 0;
+    }
+    else {
+      d2 = other.digits.get(j);
+    }
+
+    difference = d1 - d2;
+    
+    if (overflow) {
+      difference -= 1;
+      overflow = false;
+    }
+    if (difference < 0) {
+      difference += 10;
+      overflow = true;
+    }
+    
+    result.digits.addFirst(difference);
+
+    i--; j--;
   }
 
-  //Adds the remaining of the larger digits to value
-  for (; i < l_size; i++) {
-    num = larger.getLast();
-    value.digits.addFirst(num);
-    larger.removeLast();
-  }
-  
-  //If the first digit is a zero removes it
-  while (value.digits.getFirst() == 0) {
-    //If the answer is 0 we dont want to remove 0
-    if (value.digits.size() == 1) {
-      return value;
-    } 
-
-    value.digits.removeFirst();
+  //Remove the any leading zeros
+  while(result.digits.getFirst() == 0) {
+    //Unless the result is zero
+    if (result.digits.size() == 1) {
+      return result;
+    }
+    result.digits.removeFirst();
   }
 
-  return value;
+  return result;
 }
 
-/*BigInt BigInt::operator*(const BigInt &other) const {
-  // Example: 10 * 456 = 4560
-  // TODO:
-  
-         
-}*/
-
-} // namespace ds
+}
 
 #endif // __BIGINT_H__
