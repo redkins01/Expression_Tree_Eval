@@ -33,9 +33,10 @@ public:
   inline BigInt operator+(const BigInt &other) const;
   inline BigInt operator-(const BigInt &other) const;
   inline bool operator<(const BigInt &other) const;
-  inline BigInt operator=(const BigInt &other) const;
+  inline BigInt operator=(const BigInt &other);
 };
 
+//Allows comparison for BigInts, used in subtraction
 bool BigInt::operator<(const BigInt &other) const{
   if (this->digits.size() > other.digits.size()) {
     return false;
@@ -56,18 +57,14 @@ bool BigInt::operator<(const BigInt &other) const{
   }
 }
 
-BigInt BigInt::operator=(const BigInt &other) const{
-  BigInt result;
-  for (int i = 0; i < other.digits.size(); i++) {
-    result.digits.addLast(other.digits.get(i));
-  }
-  return result;
+//Copys the digits of other to the digits of this using a shallow copy
+BigInt BigInt::operator=(const BigInt &other){
+  this->digits = other.digits;
+  return *this;
 }
 
 /** Return the *sum* of this BigInt and the `other` BigInt. */
 BigInt BigInt::operator+(const BigInt &other) const {
-  // Reference: https://en.wikipedia.org/wiki/Addition
-  // Example: 456 + 1123 = 1579
   BigInt result;
   int i = this->digits.size() - 1; int j = other.digits.size() - 1;
   int d1; int d2;
@@ -75,6 +72,7 @@ BigInt BigInt::operator+(const BigInt &other) const {
   bool overflow = false;
 
   while (i >= 0 || j >= 0) {
+    //Checks if i & j can be in digits, otherwise make them zero
     if (i < 0) {
       d1 = 0;
     }
@@ -90,10 +88,12 @@ BigInt BigInt::operator+(const BigInt &other) const {
 
     sum = d1 + d2;
 
+    //If overflow, increase the sum by 1 (i.e carrying)
     if (overflow) {
       sum++;
       overflow = false;
     }
+    //If sum is greater than 10 decrease it by 10 and allow for carrying
     if (sum >= 10) {
       sum -= 10;
       overflow = true;
@@ -103,6 +103,7 @@ BigInt BigInt::operator+(const BigInt &other) const {
     i--; j--;
   }
 
+  //If overflow from previous add a 1 to the front
   if (overflow) {
     result.digits.addFirst(1);
   }
@@ -112,8 +113,7 @@ BigInt BigInt::operator+(const BigInt &other) const {
 
 /** Return the *absolute difference* between this and the `other` BigInt. */
 BigInt BigInt::operator-(const BigInt &other) const {
-  // Reference: https://en.wikipedia.org/wiki/Absolute_difference
-  // Example: 456 - 1123 = 667
+
   //Checks to make sure that this is always larger than other
   if (*this < other) {
     return other - *this;
@@ -128,6 +128,7 @@ BigInt BigInt::operator-(const BigInt &other) const {
 
   //Set value to current digit in list unless it cannot be set, which it is 0
   while(i >= 0 || j >= 0) {
+    //Checks if i & j can be in digits, otherwise make them zero
     if (i < 0) {
       d1 = 0;
     }
@@ -143,10 +144,12 @@ BigInt BigInt::operator-(const BigInt &other) const {
 
     difference = d1 - d2;
     
+    //If overflow decrease the digits by 1 (i.e carrying)
     if (overflow) {
       difference -= 1;
       overflow = false;
     }
+    //If difference is less than 0 decrease the difference and allow for carry
     if (difference < 0) {
       difference += 10;
       overflow = true;

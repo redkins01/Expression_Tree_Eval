@@ -41,6 +41,8 @@ InfixToPostfixTransformer::infixToPostfix(const VList<Token> &infix) {
           flag = true;
         }
       }
+      //Looks to see if the index is an equals, if it is increase the index and set the assigment to true (looking to see if a variable needs assignment)
+      //If the assigment is true add it to the stack and remove it from the list
       else if (temp.get(index).is(Token::Kind::Equal)) {
         if (assignement) {
           postfix.push(temp.remove(index));
@@ -65,6 +67,8 @@ InfixToPostfixTransformer::infixToPostfix(const VList<Token> &infix) {
           index--;
         }
       }
+      //Decreases the increament if assignment
+      //Add itself to the stack otherwise
       else if (temp.get(index).is(Token::Kind::Semicolon)) {
         if (assignement) {
           index--;
